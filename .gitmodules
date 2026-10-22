@@ -1,0 +1,6 @@
+[submodule "fnn-plaja"]
+	path = fnn-plaja
+	url = ../fnn-plaja.git
+[submodule "fnn-benchmarks"]
+	path = fnn-benchmarks
+	url = ../fnn-benchmarks.git

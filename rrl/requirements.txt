@@ -1,0 +1,10 @@
+# Installed with --no-deps (full list); versions as in the paper's training image, torch as CPU build.
+torch==2.3.1+cpu
+typing_extensions==4.12.1
+sympy==1.12.1
+mpmath==1.3.0
+numpy==1.26.4
+pandas==2.3.3
+python-dateutil==2.9.0.post0
+pytz==2024.1
+six==1.16.0
