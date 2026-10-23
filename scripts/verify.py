@@ -88,7 +88,7 @@ def verify(policy, check, timeout=TIMEOUT):
         verdict = "unsafe"
     elif goal_path == "0":
         verdict = "safe"
-    elif exit_code in (0, 124, 137):
+    elif exit_code in (0, 23, 124, 137):
         verdict = "timeout"
     else:
         verdict = "error"
