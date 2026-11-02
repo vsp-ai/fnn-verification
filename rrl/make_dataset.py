@@ -1,10 +1,11 @@
 """Convert a PlaJA policy-evaluation trace (--store-traces) into an RRL dataset.
 
-Usage: python rrl/make_dataset.py <trace.json> <model.jani> <interface.jani2nnet> <dataset>
-Writes <dataset>.data and <dataset>.info. Classification traces store the teacher's
-action, regression traces its action scores. Values of the (bounded integer) state
-variables that never occur in the trace get one synthetic row each (and, for
-classification, actions that never occur), as in the paper.
+Usage: python rrl/make_dataset.py <trace.json> <model.jani> <dataset>
+Writes <dataset>.data and <dataset>.info, with the inputs and labels of the model's
+"policy" field. Classification traces store the teacher's action, regression traces
+its action scores. Values of the (bounded integer) state variables that never occur in
+the trace get one synthetic row each (and, for classification, actions that never
+occur), as in the paper.
 """
 import json
 import sys
@@ -55,13 +56,13 @@ def augment(df, features, bounds, targets, n_actions, classification, rng):
 
 
 def main():
-    if len(sys.argv) != 5:
+    if len(sys.argv) != 4:
         sys.exit(__doc__)
-    trace_path, jani_path, iface_path, dataset = sys.argv[1:]
+    trace_path, jani_path, dataset = sys.argv[1:]
     rng = np.random.default_rng(SEED)
     trace = json.loads(Path(trace_path).read_text())
-    iface = json.loads(Path(iface_path).read_text())
-    features, actions = [e["name"] for e in iface["input"]], iface["output"]
+    policy = json.loads(Path(jani_path).read_text())["policy"]
+    features, actions = policy["inputs"], policy["labels"]
     bounds = load_bounds(jani_path, features)
     for i, row in enumerate(trace):
         if len(row["state"]) != len(features):

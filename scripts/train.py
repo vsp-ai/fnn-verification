@@ -22,9 +22,7 @@ def train(args):
             break
     if teacher_row is None:
         raise SystemExit(f"No teacher {args.teacher} for instance {args.instance} (see {BENCH}/index.csv)")
-    interface = f"{BENCH}/{teacher_row['interface']}"
     model = f"{BENCH}/{teacher_row['model']}"
-    prop = f"{BENCH}/{teacher_row['property']}"
 
     episodes = args.episodes
     if episodes is None:
@@ -51,8 +49,7 @@ def train(args):
         os.remove(f"{work}/trace.json")
 
     print(f"Collecting traces of {args.teacher} ({episodes} episodes) ...")
-    arguments = ["fnn-plaja/build/PlaJA", "--engine", "POLICY_EVALUATION", "--prop", "1",
-                 "--model-file", model, "--additional-properties", prop, "--nn-interface", interface,
+    arguments = ["fnn-plaja/build/PlaJA", "--engine", "POLICY_EVALUATION", "--model-file", model,
                  "--initial-state-enum", "sample", "--applicability-filtering", "1", "--terminate-cycles",
                  "--num-episodes", str(episodes), "--max-len-episode", "1250", "--seed", str(args.seed),
                  "--store-traces", f"{work}/trace.json", "--store-traces-mode", task]
@@ -68,11 +65,11 @@ def train(args):
               "-v", f"{ROOT}:/fnn", "-w", "/fnn"] + DOCKER_ARGS + [RRL_IMAGE, "python"]
 
     print("Building the dataset ...")
-    subprocess.run(docker + ["rrl/make_dataset.py", f"{work}/trace.json", model, interface, f"{work}/dataset"], check=True)
+    subprocess.run(docker + ["rrl/make_dataset.py", f"{work}/trace.json", model, f"{work}/dataset"], check=True)
 
     print(f"Training ({args.loss}, {args.mode}, {args.structure}, seed {args.seed}, {args.epochs} epochs; "
           f"log: {work}/train.log) ...")
-    command = docker + ["rrl/train.py", f"{work}/dataset", "--jani", model, "--iface", interface, "--out", policy,
+    command = docker + ["rrl/train.py", f"{work}/dataset", "--jani", model, "--out", policy,
                         "--mode", args.mode, "--loss", args.loss, "--kl-temp", f"{args.kl_temp:g}",
                         "--structure", args.structure, "--seed", str(args.seed), "--epochs", str(args.epochs)]
     if args.use_not:
@@ -87,12 +84,11 @@ def train(args):
     print(lines[-1])
 
     os.makedirs("trained", exist_ok=True)
-    columns = ["instance", "kind", "policy", "interface", "model", "property", "teacher", "loss", "verified", "run_id"]
+    columns = ["instance", "kind", "policy", "model", "teacher", "loss", "verified", "run_id"]
     rows = []
     if os.path.exists("trained/index.csv"):
         rows = [row for row in read_index("trained/index.csv") if row["policy"] != policy]
-    rows.append({"instance": args.instance, "kind": "fnn", "policy": policy,
-                 "interface": teacher_row["interface"], "model": teacher_row["model"], "property": teacher_row["property"],
+    rows.append({"instance": args.instance, "kind": "fnn", "policy": policy, "model": teacher_row["model"],
                  "teacher": args.teacher, "loss": args.loss, "verified": "", "run_id": name})
     with open("trained/index.csv", "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=columns, lineterminator="\n")

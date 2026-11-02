@@ -3,10 +3,13 @@
 Verify and evaluate the FNN and NN policies of the paper with [PlaJA](fnn-plaja) on 33 JANI
 benchmarks, and train new FNNs.
 
+This branch uses the refactored PlaJA (unstable) and the benchmarks in its simpler format. Branch
+`master` has the paper's version.
+
 ## Setup
 
 ```bash
-git clone --recurse-submodules https://github.com/vsp-ai/fnn-verification.git
+git clone --recurse-submodules -b refactor/structure https://github.com/vsp-ai/fnn-verification.git
 cd fnn-verification
 scripts/setup.py
 ```
@@ -16,8 +19,13 @@ Tested on Ubuntu 24.04 and 25.10.
 
 ## Benchmarks
 
-`fnn-benchmarks/` has one folder per instance with the JANI model, the property, the NN
-policies (`*.nnet`, `*.jani2nnet`) and the FNN policies (`fnn/fnn-<teacher>-<loss>.json`).
+`fnn-benchmarks/` has one folder per instance with the JANI model, the NN policies (`*.nnet`)
+and the FNN policies (`fnn/fnn-<teacher>-<loss>.json`). The model holds the property and the
+interface of the policies,
+```
+"policy": {"inputs": ["x", "automaton.y"], "labels": ["a", "b"]}
+```
+with the variables fed to the policy and the actions of its outputs, in order.
 `fnn-benchmarks/index.csv` lists all policies (`verified=yes` for the 164 verified in the
 paper) and `fnn-benchmarks/reference.csv` has the paper's results.
 
@@ -32,7 +40,8 @@ scripts/evaluate.py all                                             # all 260 po
 scripts/verify_all.py --jobs 16                                     # all 263 runs of the paper
 ```
 
-Results are written to `results/results.csv`.
+Results are written to `results/results.csv`, and the statistics of each run to a short CSV in
+`results/runs/` (PlaJA's `--stats-verbose` writes all statistics).
 
 `verify.py` and `verify_subset.py` stop a run after 1 hour (`TIMEOUT=<seconds>`),
 `verify_all.py` after 12 hours as in the paper. The full run takes about 2,200 CPU-hours.

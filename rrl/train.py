@@ -1,6 +1,6 @@
 """Train an FNN on a dataset written by make_dataset.py and export it for PlaJA.
 
-Usage: python rrl/train.py <dataset> --jani <model.jani> --iface <interface.jani2nnet> --out <fnn.json>
+Usage: python rrl/train.py <dataset> --jani <model.jani> --out <fnn.json>
                            [--mode predicates|onehot] [--loss mse|kl|ce] [--kl-temp 10]
                            [--structure 0@64] [--seed 42] [--epochs 25] [--use-not]
 <dataset> is the path without extension of <dataset>.data and <dataset>.info.
@@ -34,7 +34,7 @@ def read_info(path):
     return columns, task
 
 
-def load_dataset(dataset, mode, jani, iface):
+def load_dataset(dataset, mode, jani):
     """Atoms X, teacher targets y (one-hot labels or action scores), atom and action names, task."""
     columns, task = read_info(f"{dataset}.info")
     D = pd.read_csv(f"{dataset}.data", header=None)
@@ -49,7 +49,7 @@ def load_dataset(dataset, mode, jani, iface):
         y = (labels[:, None] == np.unique(labels)[None, :]).astype(np.float32)
     else:
         y = y_df.values.astype(np.float32)
-    actions = json.loads(Path(iface).read_text())["output"]
+    actions = json.loads(Path(jani).read_text())["policy"]["labels"]
 
     if mode == "onehot":  # one atom "<variable> eq <value>" per value seen in the data
         atoms, blocks = [], []
@@ -85,7 +85,6 @@ def main():
     ap = argparse.ArgumentParser(description="Train an FNN and export it for PlaJA.")
     ap.add_argument("dataset")
     ap.add_argument("--jani", required=True)
-    ap.add_argument("--iface", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--mode", choices=["predicates", "onehot"], default="predicates")
     ap.add_argument("--loss", choices=["mse", "kl", "ce"], default="mse")
@@ -102,7 +101,7 @@ def main():
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     torch.manual_seed(args.seed)
-    X, y, atoms, actions, task = load_dataset(args.dataset, args.mode, args.jani, args.iface)
+    X, y, atoms, actions, task = load_dataset(args.dataset, args.mode, args.jani)
     if (task == "classification") != (args.loss == "ce"):
         raise SystemExit(f"Loss {args.loss} does not fit a {task} dataset (ce needs classification).")
     train_set, valid_set = split(X, y)

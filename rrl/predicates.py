@@ -105,10 +105,7 @@ def _iter_property_exprs(prop_obj, key):
 
 
 def parse_problem_predicates(jani_path):
-    """Sorted, deduplicated predicates with their kinds (guard, goal, fail).
-
-    The property is read from compact-property.jani next to the model if it
-    exists, otherwise from the model's own properties (as in the paper)."""
+    """Sorted, deduplicated predicates with their kinds (guard, goal, fail)."""
     jani_path = Path(jani_path)
     j = json.loads(jani_path.read_text())
     consts = {c["name"]: c["value"] for c in j["constants"]}
@@ -120,10 +117,8 @@ def parse_problem_predicates(jani_path):
                 _collect_atoms(edge["guard"]["exp"], tmp, consts)
                 atoms.extend((p, "guard") for p in tmp)
 
-    prop_path = jani_path.parent / "compact-property.jani"
-    prop_obj = json.loads(prop_path.read_text()) if prop_path.exists() else j
-    exprs = [("goal", e) for e in _iter_property_exprs(prop_obj, "goal")]
-    exprs += [("fail", e) for key in ("reach", "avoid") for e in _iter_property_exprs(prop_obj, key)]
+    exprs = [("goal", e) for e in _iter_property_exprs(j, "goal")]
+    exprs += [("fail", e) for key in ("reach", "avoid") for e in _iter_property_exprs(j, key)]
     for kind, exp in exprs:
         tmp = []
         _collect_atoms(exp, tmp, consts)

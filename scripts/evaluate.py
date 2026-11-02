@@ -16,8 +16,6 @@ def evaluate(policy):
     row = find_policy(policy)
     file = policy_file(policy)
     model = f"{BENCH}/{row['model']}"
-    prop = f"{BENCH}/{row['property']}"
-    interface = f"{BENCH}/{row['interface']}"
 
     name = policy.replace("/", "_") + ".eval"
     log = f"results/runs/{name}.log"
@@ -27,15 +25,14 @@ def evaluate(policy):
         os.remove(stats)
     print(f"Evaluating {policy} ({EPISODES} episodes) ...")
 
-    arguments = ["fnn-plaja/build/PlaJA", "--engine", "POLICY_EVALUATION", "--prop", "1",
-                 "--model-file", model, "--additional-properties", prop,
+    arguments = ["fnn-plaja/build/PlaJA", "--engine", "POLICY_EVALUATION", "--model-file", model,
                  "--initial-state-enum", "sample", "--applicability-filtering", "1",
                  "--num-episodes", str(EPISODES), "--seed", "42",
                  "--print-stats", "--stats-file", stats]
     if row["kind"] == "fnn":
-        arguments += ["--fnn-interface", interface, "--fnn", file]
+        arguments += ["--fnn", file]
     else:
-        arguments += ["--nn-interface", interface, "--nn", file]
+        arguments += ["--nn", file]
     run_plaja(arguments, log)
 
     result = read_stats(stats)
